@@ -11,9 +11,15 @@ class PeriodicKMeans(kmeans):
     def __init__(self, data, period = 1, initial_centers = None, no_of_clusters = None, random_state = None):
         self.period = period
         self.period_2 = period / 2
-        _centers = kmeans_plusplus_initializer(data, no_of_clusters, random_state = random_state).initialize() if initial_centers is None else initial_centers
+        _metric2 = distance_metric(type_metric.USER_DEFINED, func = self.periodic_euclidean_distance_squared)
+        _centers = kmeans_plusplus_initializer(data, no_of_clusters, metric = _metric2, random_state = random_state).initialize() if initial_centers is None else initial_centers
         _metric = distance_metric(type_metric.USER_DEFINED, func = self.periodic_euclidean_distance)
         super().__init__(data, _centers, metric = _metric)
+
+
+    def periodic_euclidean_distance_squared(self, X: np.ndarray[float], Y: np.ndarray[float]): # squared distance between X and Y
+        X_Y_wrapped = (X - Y + self.period_2) % self.period - self.period_2 # wrapping giving the smallest absolute difference in each coordinate
+        return np.sum(X_Y_wrapped**2)
 
 
     def periodic_euclidean_distance(self, X: np.ndarray[float], Y: np.ndarray[float]): # distance between X and Y

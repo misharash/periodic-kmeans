@@ -14,7 +14,7 @@ maintainers = [
 ]
 description = "A modification of the k-means algorithm that takes into account periodic boundary conditions"
 version = "0.1.0"
-dependencies = ["numpy", "pyclustering"]
+dependencies = ["numpy", "pyclustering>=0.11.0"]
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "license.txt"}
