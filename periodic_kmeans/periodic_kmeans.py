@@ -11,6 +11,7 @@ class PeriodicKMeans(kmeans):
     def __init__(self, data, period = 1, initial_centers = None, no_of_clusters = None, random_state = None):
         self.period = period
         self.period_2 = period / 2
+        data = data % period # wrap "canonically" just in case
         _metric = distance_metric(type_metric.USER_DEFINED, func = self.periodic_euclidean_distance_square_numpy)
         _centers = kmeans_plusplus_initializer(data, no_of_clusters, metric = _metric, random_state = random_state).initialize() if initial_centers is None else initial_centers
         super().__init__(data, _centers, metric = _metric)
@@ -30,8 +31,12 @@ class PeriodicKMeans(kmeans):
         @return (double) Square Euclidean distance between two objects.
 
         """
-        diff_wrapped = ((object1 - object2 if simple else object1[:, None, :] - object2[None, :, :]) + self.period_2) % self.period - self.period_2 # wrapping giving the smallest absolute difference in each coordinate
-        return numpy.sum(numpy.square(diff_wrapped), axis=-1)
+        diff = object1 - object2 if simple else object1[:, None, :] - object2[None, :, :]
+        # the following may be faster than modulo operations, but they won't work so well with different periods in different coordinates; for now let's see how they fare
+        diff[diff > self.period_2] -= self.period
+        diff[diff < -self.period_2] += self.period
+        # with all data pre-wrapped, diff can not get out of [-period, period], so there should be no other cases
+        return numpy.sum(numpy.square(diff), axis=-1)
 
 
     def periodic_euclidean_distance_numpy(self, object1, object2, simple = True):
@@ -82,7 +87,7 @@ class PeriodicKMeans(kmeans):
         if len(self._kmeans__clusters) == 0:
             return []
 
-        differences = self.periodic_euclidean_distance_square_numpy(nppoints, self._kmeans__centers, simple = False)
+        differences = self.periodic_euclidean_distance_square_numpy(nppoints % self.period, self._kmeans__centers, simple = False)
 
         return numpy.argmin(differences, axis=1)
 
