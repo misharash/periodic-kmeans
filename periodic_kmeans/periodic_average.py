@@ -13,14 +13,13 @@ def periodic_average_1d(a: np.ndarray[float], weights: np.ndarray[float] | None 
     simple_average = np.average(a, weights = weights)
     period_2 = period / 2
     if a.max() - a.min() <= period_2: return simple_average # trivial case
-    # if there exists a wrapping in which the range is narrower than period/2, it's enough to try [period/2, 3 period/2) in addition to the "canonical" one, as Miniak-Górecka, Podlaski and Gwizdałła 2022 suggest, here is a shorter implementation of the algorithm
+    # if there exists a wrapping in which the range is narrower than period/2, it's enough to try [period/2, 3 period/2) in addition to the "canonical" one, as Miniak-Górecka, Podlaski and Gwizdałła 2022 suggested, here is a shorter implementation of their algorithm
     a2 = a + (a < period_2) * period
     if a2.max() - a2.min() <= period_2: return np.average(a2, weights = weights) % period
     # general case, when range is unavoidably wider than period/2
-    # first, sort a and reorder weights in the same way
-    idx = np.argsort(a)
-    a = a[idx]
-    weights = weights[idx]
+    # first, sort a (coalescing the equal elements) and reorder (and collapse) weights in the same way
+    a, idx = np.unique(a, return_inverse = True) # remove repeating elements (this involves sorting) but remember their original positions (idx is the same length as original a containing indices of unique elements in new a)
+    weights = np.bincount(idx, weights = weights) # accumulate weights of the unique elements in the new a by adding old weight[j] for each idx[j] == i
     # in the following, we try to shift elements 0 through i by a period forward and see what happens to the weighted sum of squared differences of each element with the mean
     cumsum_w = np.cumsum(weights)
     new_averages = simple_average + cumsum_w * period # the new mean, the elements 0<=j<=i become (a[j]+period), simply increased by period, so it's only the sum of their weights that matters
