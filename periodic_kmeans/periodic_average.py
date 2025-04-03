@@ -1,10 +1,14 @@
 import numpy as np
 
 
-def periodic_average(a: np.ndarray[float], weights: np.ndarray[float] | None = None, period: float = 1):
-    # a must be 1D for this to work
-    if weights is None: weights = np.ones(len(a))
-    weights = weights / sum(weights) # normalize
+def periodic_average_1d(a: np.ndarray[float], weights: np.ndarray[float] | None = None, period: float = 1):
+    if a.ndim != 1: raise ValueError("a must be a one-dimensional ndarray")
+    if weights is None: weights = np.ones_like(a)
+    if weights.ndim != 1: raise ValueError("weights must be a one-dimensional ndarray")
+    if weights.shape != a.shape: raise ValueError("weights must have the same shape as a")
+    if (sum_w := weights.sum()) <= 0: raise ValueError("Sum of weights must be positive")
+    if any(weight < 0 for weight in weights): raise ValueError("weights must not be negative")
+    weights = weights / sum_w # normalize
     a = a % period # wrap "canonically" to [0, period)
     simple_average = np.average(a, weights = weights)
     period_2 = period / 2
