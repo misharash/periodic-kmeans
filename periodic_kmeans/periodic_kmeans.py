@@ -8,10 +8,10 @@ from .periodic_average import periodic_average_2d
 
 class PeriodicKMeans(kmeans):
 
-    def __init__(self, data, period = 1, initial_centers = None, no_of_clusters = None):
+    def __init__(self, data, period = 1, initial_centers = None, no_of_clusters = None, random_state = None):
         self.period = period
         self.period_2 = period / 2
-        _centers = kmeans_plusplus_initializer(data, no_of_clusters).initialize() if initial_centers is None else initial_centers
+        _centers = kmeans_plusplus_initializer(data, no_of_clusters, random_state = random_state).initialize() if initial_centers is None else initial_centers
         _metric = distance_metric(type_metric.USER_DEFINED, func = self.periodic_euclidean_distance)
         super().__init__(data, _centers, metric = _metric)
 
