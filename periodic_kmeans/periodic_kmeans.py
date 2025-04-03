@@ -19,38 +19,34 @@ class PeriodicKMeans(kmeans):
         self._kmeans__metric._distance_metric__create_distance_calculator()
 
 
-    def periodic_euclidean_distance_square_numpy(self, object1, object2):
+    def periodic_euclidean_distance_square_numpy(self, object1, object2, simple = True):
         """!
         @brief Calculate square Euclidean distance with periodicity between two objects using numpy.
 
         @param[in] object1 (array_like): The first array_like object.
         @param[in] object2 (array_like): The second array_like object.
+        @param[in] simple (boolean): If False, compute the full distance matrix between all pairs in two sets of points.
 
         @return (double) Square Euclidean distance between two objects.
 
         """
-        diff_wrapped = (object1 - object2 + self.period_2) % self.period - self.period_2 # wrapping giving the smallest absolute difference in each coordinate
-        if len(object1.shape) > 1 or len(object2.shape) > 1:
-            return numpy.sum(numpy.square(diff_wrapped), axis=1).T # left the transposition as in pyclustering.utils.metric.euclidean_distance_square_numpy, not sure why it is there because the array should not become more than 2-dimensional
-        else:
-            return numpy.sum(numpy.square(diff_wrapped))
+        diff_wrapped = ((object1 - object2 if simple else object1[:, None, :] - object2[None, :, :]) + self.period_2) % self.period - self.period_2 # wrapping giving the smallest absolute difference in each coordinate
+        return numpy.sum(numpy.square(diff_wrapped), axis=-1)
 
 
-    def periodic_euclidean_distance_numpy(self, object1, object2):
+    def periodic_euclidean_distance_numpy(self, object1, object2, simple = True):
         """!
         @brief Calculate Euclidean distance with periodicity between two objects using numpy.
 
         @param[in] object1 (array_like): The first array_like object.
         @param[in] object2 (array_like): The second array_like object.
+        @param[in] simple (boolean): If False, compute the full distance matrix between all pairs in two sets of points.
 
         @return (double) Euclidean distance between two objects.
 
         """
-        diff_wrapped = (object1 - object2 + self.period_2) % self.period - self.period_2 # wrapping giving the smallest absolute difference in each coordinate
-        if len(object1.shape) > 1 or len(object2.shape) > 1:
-            return numpy.sqrt(numpy.sum(numpy.square(diff_wrapped), axis=1))
-        else:
-            return numpy.sqrt(numpy.sum(numpy.square(diff_wrapped)))
+        diff_wrapped = ((object1 - object2 if simple else object1[:, None, :] - object2[None, :, :]) + self.period_2) % self.period - self.period_2 # wrapping giving the smallest absolute difference in each coordinate
+        return numpy.sqrt(numpy.sum(numpy.square(diff_wrapped), axis=-1))
 
 
     def _kmeans__update_centers(self): # need to prepend parent class name to override this extra protected method
@@ -86,9 +82,7 @@ class PeriodicKMeans(kmeans):
         if len(self._kmeans__clusters) == 0:
             return []
 
-        differences = numpy.zeros((len(nppoints), len(self._kmeans__centers)))
-        for index_point in range(len(nppoints)):
-            differences[index_point] = self._kmeans__metric(nppoints[index_point], self._kmeans__centers)
+        differences = self.periodic_euclidean_distance_square_numpy(nppoints, self._kmeans__centers, simple = False)
 
         return numpy.argmin(differences, axis=1)
 
@@ -98,11 +92,7 @@ class PeriodicKMeans(kmeans):
         @brief Calculate distance from each point to each cluster center.
 
         """
-        dataset_differences = numpy.zeros((amount_clusters, len(self._kmeans__pointer_data)))
-        for index_center in range(amount_clusters):
-            dataset_differences[index_center] = self._kmeans__metric(self._kmeans__pointer_data, self._kmeans__centers[index_center])
-
-        return dataset_differences
+        return self.periodic_euclidean_distance_square_numpy(self._kmeans__centers, self._kmeans__pointer_data, simple = False)
 
 
     def _kmeans__calculate_changes(self, updated_centers): # need to prepend parent class name to override this extra protected method
