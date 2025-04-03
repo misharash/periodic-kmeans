@@ -11,6 +11,7 @@ __venv
 .idea/*
 __pycache__/
 __pycache__/*
+*.egg-info
 
 ## data files
 data/

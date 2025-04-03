@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[project]
+name = "periodic-kmeans"
+authors = [
+    { name = "Alicja Miniak-Górecka" },
+    { name = "Krzysztof Podlaski", email = "krzysztof.podlaski@gmail.com" },
+    { name = "Tomasz Gwizdałła" },
+    { name = "Michael Rashkovetskyi", email = "misharash@gmail.com" },
+]
+maintainers = [
+    { name = "Michael Rashkovetskyi", email = "misharash@gmail.com" },
+]
+description = "A modification of the k-means algorithm that takes into account periodic boundary conditions"
+version = "0.1.0"
+dependencies = ["numpy", "pyclustering"]
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "license.txt"}
+keywords = ['periodic-kmeans data-mining clustering cluster-analysis machine-learning']
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Education',
+    'Intended Audience :: Information Technology',
+    'Intended Audience :: Science/Research',
+    'Natural Language :: English',
+    'Operating System :: Microsoft',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: POSIX :: Linux',
+    'Operating System :: Unix',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Topic :: Education',
+    'Topic :: Scientific/Engineering :: Artificial Intelligence',
+    'Topic :: Scientific/Engineering :: Bio-Informatics',
+    'Topic :: Scientific/Engineering :: Information Analysis',
+    'Topic :: Scientific/Engineering :: Visualization',
+    'Topic :: Software Development :: Libraries'
+]
+
+[project.urls]
+Documentation = "https://github.com/misharash/periodic-kmeans#readme"
+Issues = "https://github.com/misharash/periodic-kmeans/issues"
+Source = "https://github.com/misharash/periodic-kmeans"
+
+[tool.setuptools]
+packages = ["periodic_kmeans"]
