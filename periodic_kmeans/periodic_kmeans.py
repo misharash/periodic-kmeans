@@ -1,74 +1,39 @@
-import types
-
-import numpy  as np
+import numpy as np
 from pyclustering.cluster.center_initializer import kmeans_plusplus_initializer
 from pyclustering.cluster.kmeans import kmeans
 from pyclustering.utils.metric import distance_metric, type_metric
 
-from measures.periodicMeasure import PeriodicMeasure
-
-
-def periodic_mean(points, period=360):
-    period_2 = period/2
-    if max(points) - min(points) > period_2:
-        _points = np.array([0 if x > period_2 else 1 for x in points]).reshape(-1,1)
-        n_left =_points.sum()
-        n_right = len(points) - n_left
-        if n_left >0:
-            mean_left = (points * _points).sum()/n_left
-        else:
-            mean_left =0
-        if n_right >0:
-            mean_right = (points * (1-_points)).sum() / n_right
-        else:
-            mean_right = 0
-        _mean = (mean_left*n_left+mean_right*n_right+n_left*period)/(n_left+n_right)
-        return _mean % period
-    else:
-        return points.mean(axis=0)
-
-def _periodic_update_centers(self):
-    dimension = self._kmeans__pointer_data.shape[1]
-    centers = np.zeros((len(self._kmeans__clusters), dimension))
-
-    for index in range(len(self._kmeans__clusters)):
-        cluster_points = self._kmeans__pointer_data[self._kmeans__clusters[index], :]
-        centers[index] = periodic_mean(cluster_points, self.period)
-    return np.array(centers)
-
-def periodic_kmeans(data, initial_centers, metric):
-
-    kmeans_instance =  kmeans(data, initial_centers, metric=metric)
-    kmeans_instance._kmeans__update_centers = types.MethodType(_periodic_update_centers,kmeans_instance)
-    return kmeans_instance
+from .periodic_average import periodic_average_2d
 
 
 class PeriodicKMeans(kmeans):
 
-    def __init__(self, data, period, initial_centers = None, no_of_clusters = None):
-        self.data = data
+    def __init__(self, data, period = 1, initial_centers = None, no_of_clusters = None):
         self.period = period
-        self.measure = PeriodicMeasure(period)
-        self.metric = distance_metric(type_metric.USER_DEFINED, func=self.measure.distance)
-        if initial_centers is None:
-            _centers = kmeans_plusplus_initializer(data, no_of_clusters).initialize()
-        else:
-            _centers = initial_centers
-        super().__init__(data, _centers, metric=self.metric)
-        self._kmeans__update_centers = types.MethodType(_periodic_update_centers, self)
-
-    def clustering(self):
-        self.process()
-        clusters = self.get_clusters()
-        clust_data = []
-        for c in range(len(clusters)):
-            clust_data.append(np.array(self.data[clusters[c]]))
-        return clust_data, self.get_total_wce(), self.get_centers()
-
-    def periodic_shift(self, data):
-        return self.measure.periodic_shift(data)
+        self.period_2 = period / 2
+        _centers = kmeans_plusplus_initializer(data, no_of_clusters).initialize() if initial_centers is None else initial_centers
+        _metric = distance_metric(type_metric.USER_DEFINED, func = self.periodic_euclidean_distance)
+        super().__init__(data, _centers, metric = _metric)
 
 
+    def periodic_euclidean_distance(self, X: np.ndarray[float], Y: np.ndarray[float]): # distance between X and Y
+        X_Y_wrapped = (X - Y + self.period_2) % self.period - self.period_2 # wrapping giving the smallest absolute difference in each coordinate
+        return np.sqrt(np.sum(X_Y_wrapped**2))
 
 
+    def __update_centers(self):
+        """!
+        @brief Calculate centers of clusters in line with contained objects.
+        
+        @return (numpy.array) Updated centers.
+        
+        """
+        
+        dimension = self.__pointer_data.shape[1]
+        centers = np.zeros((len(self.__clusters), dimension))
+        
+        for index in range(len(self.__clusters)):
+            cluster_points = self.__pointer_data[self.__clusters[index], :]
+            centers[index] = periodic_average_2d(cluster_points, axis = 0, period = self.period)
 
+        return np.array(centers)
