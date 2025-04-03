@@ -30,20 +30,22 @@ def periodic_average_1d(a: np.ndarray[float], weights: np.ndarray[float] | None 
     weighted_sums_of_squared_differences = weighted_sums_of_squared_elements - new_averages**2 # weighted sums of (a[j] - average)^2, expands into the weighted sum of a[j]^2 - average^2
     return new_averages[np.argmin(weighted_sums_of_squared_differences)] % period # the best average is the one that minimizes the weighted sum of squares
 
+
 def periodic_average_2d(a: np.ndarray[float], axis: Literal[-2, -1, 0, 1] = 0, weights: np.ndarray[float] | None = None, period: float | np.ndarray[float] = 1):
     if a.ndim != 2: raise ValueError("a must be a two-dimensional ndarray")
 
     if axis > 1 or axis < -2: raise ValueError("Illegal axis for a two-dimensional ndarray")
     axis = (axis + 2) % 2 # turn negative axis to 0 or 1, so that the other axis is `not axis`
+    if axis: a = a.T # if axis = 1 (or equivalently -1 originally), swap the axes
 
     if weights is None: weights = np.ones(a.shape[axis])
     if weights.ndim != 1: raise ValueError("weights must be a one-dimensional ndarray")
-    if weights.shape != a.shape[axis]: raise ValueError("weights must have the same length as a along the axis")
+    if len(weights) != len(a): raise ValueError("weights must have the same length as a along the axis")
     if weights.sum() <= 0: raise ValueError("Sum of weights must be positive")
     if any(weight < 0 for weight in weights): raise ValueError("weights must not be negative")
 
     if np.shape(period) == tuple(): period = np.repeat(period, a.shape[not axis])
     if period.ndim != 1: raise ValueError("period must be a one-dimensional ndarray")
-    if len(period) != a.shape[not axis]: raise ValueError("period must have the same length as a along the other axis")
+    if len(period) != a.shape[1]: raise ValueError("period must have the same length as a along the other axis")
 
-    return np.array([periodic_average_1d(a[i], weights = weights, period = period[i]) for i in range(a.shape(not axis))])
+    return np.array([periodic_average_1d(a[:, i], weights = weights, period = period[i]) for i in range(a.shape[1])])
