@@ -89,7 +89,7 @@ class PeriodicKMeans(kmeans):
         @brief Calculate distance from each point to each cluster center.
 
         """
-        return self.periodic_euclidean_distance_square_numpy(self._kmeans__centers, self._kmeans__pointer_data, simple = False)
+        return self.periodic_euclidean_distance_square_numpy(self._kmeans__centers[:amount_clusters], self._kmeans__pointer_data, simple = False)
 
 
     def _kmeans__calculate_changes(self, updated_centers): # need to prepend parent class name to override this extra protected method
