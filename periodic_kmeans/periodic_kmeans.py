@@ -1,4 +1,5 @@
 import numpy
+from jax import numpy as jnp
 from pyclustering.cluster.center_initializer import kmeans_plusplus_initializer
 from pyclustering.cluster.kmeans import kmeans
 from pyclustering.utils.metric import distance_metric, type_metric
@@ -16,34 +17,36 @@ class PeriodicKMeans(kmeans):
         super().__init__(data, _centers, metric = _metric)
 
 
-    def periodic_euclidean_distance_square_numpy(self, object1, object2, simple = True):
+    def periodic_euclidean_distance_square_numpy(self, object1, object2, simple = True, use_jax = False):
         """!
         @brief Calculate square Euclidean distance with periodicity between two objects using numpy.
 
         @param[in] object1 (array_like): The first array_like object.
         @param[in] object2 (array_like): The second array_like object.
         @param[in] simple (boolean): If False, compute the full distance matrix between all pairs in two sets of points.
+        @param[in] use_jax (boolean): Whether to use JAX numpy, if False, uses the usual numpy.
 
         @return (double) Square Euclidean distance between two objects.
 
         """
         diff_wrapped = ((object1 - object2 if simple else object1[:, None, :] - object2[None, :, :]) + self.period_2) % self.period - self.period_2 # wrapping giving the smallest absolute difference in each coordinate
-        return numpy.sum(numpy.square(diff_wrapped), axis=-1)
+        return numpy.sum(numpy.square(diff_wrapped), axis=-1) if not use_jax else jnp.sum(jnp.square(diff_wrapped), axis=-1)
 
 
-    def periodic_euclidean_distance_numpy(self, object1, object2, simple = True):
+    def periodic_euclidean_distance_numpy(self, object1, object2, simple = True, use_jax = False):
         """!
         @brief Calculate Euclidean distance with periodicity between two objects using numpy.
 
         @param[in] object1 (array_like): The first array_like object.
         @param[in] object2 (array_like): The second array_like object.
         @param[in] simple (boolean): If False, compute the full distance matrix between all pairs in two sets of points.
+        @param[in] use_jax (boolean): Whether to use JAX numpy, if False, uses the usual numpy.
 
         @return (double) Euclidean distance between two objects.
 
         """
         diff_wrapped = ((object1 - object2 if simple else object1[:, None, :] - object2[None, :, :]) + self.period_2) % self.period - self.period_2 # wrapping giving the smallest absolute difference in each coordinate
-        return numpy.sqrt(numpy.sum(numpy.square(diff_wrapped), axis=-1))
+        return numpy.sqrt(numpy.sum(numpy.square(diff_wrapped), axis=-1)) if not use_jax else jnp.sqrt(jnp.sum(jnp.square(diff_wrapped), axis=-1))
 
 
     def _kmeans__update_centers(self): # need to prepend parent class name to override this extra protected method
@@ -75,13 +78,13 @@ class PeriodicKMeans(kmeans):
 
         """
 
-        nppoints = numpy.array(points)
+        nppoints = jnp.array(points)
         if len(self._kmeans__clusters) == 0:
             return []
 
-        differences = self.periodic_euclidean_distance_square_numpy(nppoints, self._kmeans__centers, simple = False)
+        differences = self.periodic_euclidean_distance_square_numpy(nppoints, self._kmeans__centers, simple = False, use_jax = True)
 
-        return numpy.argmin(differences, axis=1)
+        return jnp.argmin(differences, axis=1)
 
 
     def _kmeans__calculate_dataset_difference(self, amount_clusters): # need to prepend parent class name to override this extra protected method
