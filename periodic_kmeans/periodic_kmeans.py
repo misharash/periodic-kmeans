@@ -14,9 +14,6 @@ class PeriodicKMeans(kmeans):
         _metric = distance_metric(type_metric.USER_DEFINED, func = self.periodic_euclidean_distance_square_numpy)
         _centers = kmeans_plusplus_initializer(data, no_of_clusters, metric = _metric, random_state = random_state).initialize() if initial_centers is None else initial_centers
         super().__init__(data, _centers, metric = _metric)
-        # enable some numpy vectorization for distance computations
-        self._kmeans__metric.__numpy = True
-        self._kmeans__metric._distance_metric__create_distance_calculator()
 
 
     def periodic_euclidean_distance_square_numpy(self, object1, object2, simple = True):
@@ -107,7 +104,7 @@ class PeriodicKMeans(kmeans):
         if len(self._kmeans__centers) != len(updated_centers):
             maximum_change = float('inf')
         else:
-            changes = self._kmeans__metric(self._kmeans__centers, updated_centers)
+            changes = self.periodic_euclidean_distance_square_numpy(self._kmeans__centers, updated_centers)
             maximum_change = numpy.max(changes)
 
         return maximum_change
