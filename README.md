@@ -8,12 +8,7 @@ The implementation uses pyclustering library as a base. The main modification is
 The three exemplary usages of the approach is in the [package examples](examples).
 
 # Usage
-The implementation requires library [pyclustering] (https://pyclustering.github.io/). 
-
-Thus it has to be installed for example, using pip:
-```
-    $pip install pyclustering
-```
+The implementation requires library [pyclustering](https://pyclustering.github.io/). Both the pip and [original repository version](https://github.com/annoviko/pyclustering) of `pyclustering` seem to give an error (as of April 3, 2025), so it is probably easier to install [a special fork addressing the problem](https://github.com/misharash/pyclustering) (should be installed automatically when you install this `periodic-kmeans` package with `pip install .`)
 
 The implementation require two packages from the repository [measures](measures) and [periodic_kmeans](periodic_kmeans). The first introduces class [PeriocicMeasure](measures/periodicMeasure.py). The second introduce class [PeriodicKMeans](periodic_kmeans/periodic_kmeans.py).
 The usage of the implementation is shown for three different datasets in [examples](examples)
